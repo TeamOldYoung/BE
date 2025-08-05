@@ -6,17 +6,23 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
     
-    // System Errors (S001~S099)
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 오류가 발생했습니다."),
-    INVALID_INPUT(HttpStatus.BAD_REQUEST, "S002", "잘못된 입력값입니다."),
+    // System Errors (E100~E199)
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E100", "서버 내부 오류가 발생했습니다."),
+    DATABASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E101", "데이터베이스 오류가 발생했습니다."),
     
-    // Common Business Errors (C001~C099)
-    ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "C001", "요청한 데이터를 찾을 수 없습니다."),
-    DUPLICATE_ENTITY(HttpStatus.CONFLICT, "C002", "중복된 데이터입니다."),
+    // Validation Errors (E200~E299)
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "E200", "입력값이 올바르지 않습니다."),
+    MISSING_REQUEST_PARAMETER(HttpStatus.BAD_REQUEST, "E201", "필수 파라미터가 누락되었습니다."),
+    INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "E202", "데이터 타입이 올바르지 않습니다."),
+    INVALID_FORMAT(HttpStatus.BAD_REQUEST, "E203", "데이터 형식이 올바르지 않습니다."),
     
-    // Authentication Errors (A001~A099)
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
-    ACCESS_DENIED(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다.");
+    // Authentication & Authorization Errors (E300~E399)
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "E300", "인증이 필요합니다."),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "E301", "접근 권한이 없습니다."),
+    
+    // Business Logic Errors (E400~E499)
+    ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E400", "요청한 데이터를 찾을 수 없습니다."),
+    DUPLICATE_ENTITY(HttpStatus.CONFLICT, "E401", "중복된 데이터입니다.");
     
     private final HttpStatus status;
     private final String code;

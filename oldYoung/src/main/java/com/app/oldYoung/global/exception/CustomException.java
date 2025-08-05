@@ -31,4 +31,16 @@ public class CustomException extends RuntimeException {
         this.errorCode = errorCode;
         this.context = null;
     }
+    
+    public CustomException(ErrorCode errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+        this.context = null;
+    }
+    
+    public CustomException(ErrorCode errorCode, String message, Object context, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+        this.context = context;
+    }
 }
