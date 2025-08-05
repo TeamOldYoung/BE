@@ -1,10 +1,9 @@
 package com.app.oldYoung.domain.harume.entity;
 
-import com.app.oldYoung.common.entity.BaseEntity;
+import com.app.oldYoung.global.common.BaseEntity;
 import com.app.oldYoung.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,11 +27,4 @@ public class Harume extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @Builder
-    public Harume(String content, MessageType messageType, User user) {
-        this.content = content;
-        this.messageType = messageType;
-        this.user = user;
-    }
 }

@@ -1,4 +1,4 @@
-package com.app.oldYoung.common.security;
+package com.app.oldYoung.global.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

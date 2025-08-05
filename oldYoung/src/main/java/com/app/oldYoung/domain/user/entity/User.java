@@ -1,13 +1,12 @@
 package com.app.oldYoung.domain.user.entity;
 
-import com.app.oldYoung.common.entity.BaseEntity;
 import com.app.oldYoung.domain.entitlement.entity.Entitlement;
 import com.app.oldYoung.domain.harume.entity.Harume;
 import com.app.oldYoung.domain.incomebracket.entity.IncomeBracket;
 import com.app.oldYoung.domain.incomesnapshot.entity.IncomeSnapshot;
+import com.app.oldYoung.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -46,19 +45,4 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Entitlement> entitlements;
-
-    @Builder
-    public User(String membername, String birthDate, String address, String email) {
-        this.membername = membername;
-        this.birthDate = birthDate;
-        this.address = address;
-        this.email = email;
-    }
-
-    public void updateUserInfo(String membername, String birthDate, String address, String email) {
-        this.membername = membername;
-        this.birthDate = birthDate;
-        this.address = address;
-        this.email = email;
-    }
 }

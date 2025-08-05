@@ -1,10 +1,9 @@
 package com.app.oldYoung.domain.incomesnapshot.entity;
 
-import com.app.oldYoung.common.entity.BaseEntity;
 import com.app.oldYoung.domain.user.entity.User;
+import com.app.oldYoung.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,15 +35,4 @@ public class IncomeSnapshot extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @Builder
-    public IncomeSnapshot(Long incomeEval, Long assetEval, Long totalIncome,
-                         Long midRatio, Long expBracket, User user) {
-        this.incomeEval = incomeEval;
-        this.assetEval = assetEval;
-        this.totalIncome = totalIncome;
-        this.midRatio = midRatio;
-        this.expBracket = expBracket;
-        this.user = user;
-    }
 }

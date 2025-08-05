@@ -1,4 +1,4 @@
-package com.app.oldYoung.common.response;
+package com.app.oldYoung.global.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;

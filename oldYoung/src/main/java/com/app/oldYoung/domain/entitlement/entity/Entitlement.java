@@ -1,10 +1,9 @@
 package com.app.oldYoung.domain.entitlement.entity;
 
-import com.app.oldYoung.common.entity.BaseEntity;
+import com.app.oldYoung.global.common.BaseEntity;
 import com.app.oldYoung.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -39,16 +38,4 @@ public class Entitlement extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @Builder
-    public Entitlement(String title, String subscript, String period,
-                      String agency, String contact, String applicant, User user) {
-        this.title = title;
-        this.subscript = subscript;
-        this.period = period;
-        this.agency = agency;
-        this.contact = contact;
-        this.applicant = applicant;
-        this.user = user;
-    }
 }

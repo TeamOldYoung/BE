@@ -1,4 +1,4 @@
-package com.app.oldYoung.common.exception;
+package com.app.oldYoung.global.exception;
 
 import lombok.Getter;
 

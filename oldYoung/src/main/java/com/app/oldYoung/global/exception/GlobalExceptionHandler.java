@@ -1,6 +1,6 @@
-package com.app.oldYoung.common.exception;
+package com.app.oldYoung.global.exception;
 
-import com.app.oldYoung.common.response.ApiResponse;
+import com.app.oldYoung.global.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;

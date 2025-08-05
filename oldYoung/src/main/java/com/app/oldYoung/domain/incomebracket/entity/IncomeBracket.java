@@ -1,10 +1,9 @@
 package com.app.oldYoung.domain.incomebracket.entity;
 
-import com.app.oldYoung.common.entity.BaseEntity;
 import com.app.oldYoung.domain.user.entity.User;
+import com.app.oldYoung.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -52,21 +51,4 @@ public class IncomeBracket extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @Builder
-    public IncomeBracket(Integer familyNum, Long salary, Long pension, String housingType,
-                        Long asset, Long debt, String carInfo, Boolean disability,
-                        EmploymentStatus employmentStatus, Boolean pastSupported, User user) {
-        this.familyNum = familyNum;
-        this.salary = salary;
-        this.pension = pension;
-        this.housingType = housingType;
-        this.asset = asset;
-        this.debt = debt;
-        this.carInfo = carInfo;
-        this.disability = disability;
-        this.employmentStatus = employmentStatus;
-        this.pastSupported = pastSupported;
-        this.user = user;
-    }
 }
