@@ -1,4 +1,4 @@
-package com.app.oldYoung.api.health.controller;
+package com.app.oldYoung.global.controller;
 
 import com.app.oldYoung.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
