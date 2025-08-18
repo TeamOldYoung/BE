@@ -42,11 +42,11 @@ public class JwtUtil {
             Date expiryDate = new Date(now.getTime() + expiration);
 
             return Jwts.builder()
-                .subject(email)
+                .setSubject(email)
                 .claim("role", role)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey, Jwts.SIG.HS256)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
         } catch (Exception e) {
             log.error("JWT 토큰 생성 실패: {}", e.getMessage());
@@ -56,11 +56,11 @@ public class JwtUtil {
 
     public Claims validateToken(String token) {
         try {
-            return Jwts.parser()
-                .verifyWith(secretKey)
+            return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseClaimsJws(token)
+                .getBody();
         } catch (ExpiredJwtException e) {
             log.error("JWT 토큰이 만료되었습니다: {}", e.getMessage());
             throw new AuthHandler(ErrorCode.JWT_TOKEN_EXPIRED);
