@@ -1,11 +1,18 @@
 package com.app.oldYoung.global.security.util;
 
+import com.app.oldYoung.global.common.apiResponse.exception.CustomException;
 import com.app.oldYoung.global.common.apiResponse.exception.ErrorCode;
 import com.app.oldYoung.global.security.exception.AuthHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import javax.crypto.SecretKey;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -13,16 +20,10 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
-import java.util.Date;
-import org.springframework.web.client.RestTemplate;
 
 @Component
 @Slf4j
@@ -32,18 +33,155 @@ public class JwtUtil {
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
     private final String kakaoClientId;
+    private final String googleClientId;
 
-    private final Map<String, PublicKey> kakaoPublicKeys = new ConcurrentHashMap<>();
+    private final Map<String, PublicKey> publicKeys = new ConcurrentHashMap<>();
 
     public JwtUtil(
         @Value("${jwt.secret}") String secret,
         @Value("${jwt.access-token-expiration}") long accessTokenExpiration,
         @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration,
-        @Value("${spring.security.oauth2.client.registration.kakao.client-id}") String kakaoClientId) {
+        @Value("${spring.security.oauth2.client.registration.kakao.client-id}") String kakaoClientId,
+        @Value("${spring.security.oauth2.client.registration.google.client-id}") String googleClientId
+    ) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
         this.kakaoClientId = kakaoClientId;
+        this.googleClientId = googleClientId;
+    }
+
+    /**
+     * [OIDC] 구글 ID Token의 유효성을 검증하고, 토큰에 담긴 사용자 정보(Claims)를 반환합니다.
+     *
+     * @param idToken 구글로부터 받은 ID Token 문자열
+     * @return 사용자 정보가 담긴 Claims 객체
+     */
+    public Claims validateAndGetClaimsFromGoogleToken(String idToken) {
+        try {
+            String kid = getKidFromTokenHeader(idToken);
+            PublicKey publicKey = getPublicKey("google", kid);
+
+            return Jwts.parserBuilder()
+                .setSigningKey(publicKey)
+                .requireIssuer("https://accounts.google.com") // iss가 구글인지 확인
+                .requireAudience(googleClientId)           // aud가 우리 앱 ID인지 확인
+                .build()
+                .parseClaimsJws(idToken)
+                .getBody();
+        } catch (ExpiredJwtException e) {
+            log.error("만료된 구글 ID Token입니다: {}", e.getMessage());
+            throw new AuthHandler(ErrorCode.JWT_TOKEN_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("유효하지 않은 구글 ID Token입니다: {}", e.getMessage());
+            throw new AuthHandler(ErrorCode.JWT_TOKEN_INVALID);
+        }
+    }
+
+    /**
+     * [OIDC] 카카오 ID Token의 유효성을 검증하고, 토큰에 담긴 사용자 정보(Claims)를 반환합니다.
+     *
+     * @param idToken 카카오로부터 받은 ID Token 문자열
+     * @return 사용자 정보가 담긴 Claims 객체
+     */
+    public Claims validateAndGetClaimsFromKakaoToken(String idToken) {
+        try {
+            String kid = getKidFromTokenHeader(idToken);
+            PublicKey publicKey = getPublicKey("kakao", kid);
+
+            return Jwts.parserBuilder()
+                .setSigningKey(publicKey)
+                .requireIssuer("https://kauth.kakao.com")
+                .requireAudience(kakaoClientId)
+                .build()
+                .parseClaimsJws(idToken)
+                .getBody();
+        } catch (ExpiredJwtException e) {
+            log.error("만료된 카카오 ID Token입니다: {}", e.getMessage());
+            throw new AuthHandler(ErrorCode.JWT_TOKEN_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("유효하지 않은 카카오 ID Token입니다: {}", e.getMessage());
+            throw new AuthHandler(ErrorCode.JWT_TOKEN_INVALID);
+        }
+    }
+
+    /**
+     * [OIDC] Provider(카카오, 구글)와 kid(Key ID)를 받아 해당 공개키를 반환합니다. 내부에 캐싱 로직이 있어 한번 조회한 키는 다시 API 요청을
+     * 하지 않습니다.
+     *
+     * @param provider "kakao" 또는 "google"
+     * @param kid      토큰 헤더에 명시된 Key ID
+     * @return 서명 검증에 사용할 PublicKey 객체
+     */
+    private PublicKey getPublicKey(String provider, String kid) {
+        String cacheKey = provider + "_" + kid;
+        if (publicKeys.containsKey(cacheKey)) {
+            return publicKeys.get(cacheKey);
+        }
+
+        String jwksUri;
+        if ("kakao".equals(provider)) {
+            jwksUri = "https://kauth.kakao.com/.well-known/jwks.json";
+        } else if ("google".equals(provider)) {
+            jwksUri = "https://www.googleapis.com/oauth2/v3/certs";
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 provider입니다.");
+        }
+
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, List<Map<String, String>>> jwks = restTemplate.getForObject(jwksUri, Map.class);
+
+        PublicKey foundKey = null;
+        if (jwks != null && jwks.get("keys") != null) {
+            for (Map<String, String> keyInfo : jwks.get("keys")) {
+                String currentKid = keyInfo.get("kid");
+                PublicKey publicKey = generatePublicKey(keyInfo);
+                publicKeys.put(provider + "_" + currentKid, publicKey);
+                if (kid.equals(currentKid)) {
+                    foundKey = publicKey;
+                }
+            }
+        }
+
+        if (foundKey == null) {
+            throw new CustomException(ErrorCode.JWT_TOKEN_INVALID, "일치하는 공개키를 찾을 수 없습니다.");
+        }
+        return foundKey;
+    }
+
+    /**
+     * [OIDC] JWKS(JSON Web Key Set) 정보로부터 PublicKey 객체를 생성합니다.
+     */
+    private PublicKey generatePublicKey(Map<String, String> keyInfo) {
+        try {
+            byte[] nBytes = Base64.getUrlDecoder().decode(keyInfo.get("n"));
+            byte[] eBytes = Base64.getUrlDecoder().decode(keyInfo.get("e"));
+
+            BigInteger n = new BigInteger(1, nBytes);
+            BigInteger e = new BigInteger(1, eBytes);
+
+            RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(n, e);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            return keyFactory.generatePublic(publicKeySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
+            throw new CustomException(ErrorCode.JWT_TOKEN_INVALID, "공개키 생성에 실패했습니다.", ex);
+        }
+    }
+
+    /**
+     * [OIDC] 토큰의 헤더를 디코딩하여 kid(Key ID)를 추출합니다.
+     */
+    private String getKidFromTokenHeader(String token) {
+        try {
+            String headerSegment = token.substring(0, token.indexOf('.'));
+            byte[] decodedHeader = Base64.getUrlDecoder().decode(headerSegment);
+            Map<String, Object> header = new ObjectMapper().readValue(new String(decodedHeader),
+                Map.class);
+            return (String) header.get("kid");
+        } catch (JsonProcessingException | NullPointerException e) {
+            log.error("ID Token 헤더 파싱 실패", e);
+            throw new AuthHandler(ErrorCode.JWT_TOKEN_INVALID);
+        }
     }
 
     public String createAccessToken(String email, String role) {
@@ -69,88 +207,6 @@ public class JwtUtil {
         } catch (Exception e) {
             log.error("JWT 토큰 생성 실패: {}", e.getMessage());
             throw new AuthHandler(ErrorCode.JWT_TOKEN_CREATION_FAILED);
-        }
-    }
-
-    // [OIDC] 카카오 ID Token 검증 및 Claims 추출 메소드
-    public Claims validateAndGetClaimsFromKakaoToken(String idToken) {
-        try {
-            // 1. 토큰 헤더에서 kid(Key ID) 추출
-            String kid = getKidFromTokenHeader(idToken);
-
-            // 2. kid에 해당하는 공개키 가져오기 (캐시 또는 API 호출)
-            PublicKey publicKey = getKakaoPublicKey(kid);
-
-            // 3. 공개키를 사용하여 토큰 검증
-            return Jwts.parserBuilder()
-                .setSigningKey(publicKey)
-                .requireIssuer("https://kauth.kakao.com") // iss가 카카오인지 확인
-                .requireAudience(kakaoClientId)           // aud가 우리 앱 ID인지 확인
-                .build()
-                .parseClaimsJws(idToken)
-                .getBody();
-        } catch (ExpiredJwtException e) {
-            log.error("만료된 카카오 ID Token입니다: {}", e.getMessage());
-            throw new AuthHandler(ErrorCode.JWT_TOKEN_EXPIRED);
-        } catch (JwtException | IllegalArgumentException e) {
-            log.error("유효하지 않은 카카오 ID Token입니다: {}", e.getMessage());
-            throw new AuthHandler(ErrorCode.JWT_TOKEN_INVALID);
-        }
-    }
-
-    private String getKidFromTokenHeader(String token) {
-        try {
-            String headerSegment = token.substring(0, token.indexOf('.'));
-            byte[] decodedHeader = Base64.getUrlDecoder().decode(headerSegment);
-            Map<String, Object> header = new ObjectMapper().readValue(new String(decodedHeader), Map.class);
-            return (String) header.get("kid");
-        } catch (JsonProcessingException e) {
-            log.error("ID Token 헤더 파싱 실패", e);
-            throw new AuthHandler(ErrorCode.JWT_TOKEN_INVALID);
-        }
-    }
-
-    private PublicKey getKakaoPublicKey(String kid) {
-        // 캐시된 키가 있으면 바로 반환
-        if (kakaoPublicKeys.containsKey(kid)) {
-            return kakaoPublicKeys.get(kid);
-        }
-
-        // 캐시에 없으면 카카오 JWKS API에서 가져오기
-        RestTemplate restTemplate = new RestTemplate();
-        Map<String, List<Map<String, String>>> jwks = restTemplate.getForObject("https://kauth.kakao.com/.well-known/jwks.json", Map.class);
-
-        PublicKey foundKey = null;
-        for (Map<String, String> keyInfo : jwks.get("keys")) {
-            String currentKid = keyInfo.get("kid");
-            // 모든 키를 캐시에 저장
-            PublicKey publicKey = generatePublicKey(keyInfo);
-            kakaoPublicKeys.put(currentKid, publicKey);
-            if (kid.equals(currentKid)) {
-                foundKey = publicKey;
-            }
-        }
-
-        if (foundKey == null) {
-            throw new AuthHandler(ErrorCode.JWT_TOKEN_INVALID);
-        }
-
-        return foundKey;
-    }
-
-    private PublicKey generatePublicKey(Map<String, String> keyInfo) {
-        try {
-            byte[] nBytes = Base64.getUrlDecoder().decode(keyInfo.get("n"));
-            byte[] eBytes = Base64.getUrlDecoder().decode(keyInfo.get("e"));
-
-            BigInteger n = new BigInteger(1, nBytes);
-            BigInteger e = new BigInteger(1, eBytes);
-
-            RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(n, e);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            return keyFactory.generatePublic(publicKeySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
-            throw new AuthHandler(ErrorCode.JWT_TOKEN_INVALID);
         }
     }
 
