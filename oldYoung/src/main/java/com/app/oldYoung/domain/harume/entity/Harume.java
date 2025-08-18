@@ -1,6 +1,6 @@
 package com.app.oldYoung.domain.harume.entity;
 
-import com.app.oldYoung.global.common.BaseEntity;
+import com.app.oldYoung.global.common.entity.BaseEntity;
 import com.app.oldYoung.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

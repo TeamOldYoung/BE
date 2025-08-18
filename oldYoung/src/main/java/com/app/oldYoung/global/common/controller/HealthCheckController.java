@@ -1,6 +1,6 @@
-package com.app.oldYoung.global.controller;
+package com.app.oldYoung.global.common.controller;
 
-import com.app.oldYoung.global.response.ApiResponse;
+import com.app.oldYoung.global.common.apiResponse.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
