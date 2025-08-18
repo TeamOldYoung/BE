@@ -1,7 +1,7 @@
 package com.app.oldYoung.domain.incomesnapshot.entity;
 
 import com.app.oldYoung.domain.user.entity.User;
-import com.app.oldYoung.global.common.BaseEntity;
+import com.app.oldYoung.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

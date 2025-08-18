@@ -4,9 +4,10 @@ import com.app.oldYoung.domain.entitlement.entity.Entitlement;
 import com.app.oldYoung.domain.harume.entity.Harume;
 import com.app.oldYoung.domain.incomebracket.entity.IncomeBracket;
 import com.app.oldYoung.domain.incomesnapshot.entity.IncomeSnapshot;
-import com.app.oldYoung.global.common.BaseEntity;
+import com.app.oldYoung.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -34,6 +35,15 @@ public class User extends BaseEntity {
     @Column(name = "email")
     private String email;
 
+    @Column(name = "password")
+    private String password;
+
+    @Column(name = "provider")
+    private String provider;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private IncomeBracket incomeBracket;
 
@@ -45,4 +55,13 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Entitlement> entitlements;
+
+    @Builder
+    public User(String membername, String email, String password, String provider, String providerId) {
+        this.membername = membername;
+        this.email = email;
+        this.password = password;
+        this.provider = provider;
+        this.providerId = providerId;
+    }
 }
