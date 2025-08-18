@@ -18,7 +18,7 @@ public class RefreshTokenService {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
-    // 리프레시 토큰 저장 (RTR 방식)
+    // 1. RTR(Refresh Token Rotation) 방식으로 토큰 새로 저장 시 기존 토큰 자동 무효화
     public void saveRefreshToken(String email, String refreshToken) {
         String key = getRefreshTokenKey(email);
         try {
@@ -35,7 +35,7 @@ public class RefreshTokenService {
         }
     }
 
-    // 리프레시 토큰 조회 및 검증
+    // 2. Redis에 저장된 토큰과 요청 토큰의 일치 여부 검증
     public boolean validateRefreshToken(String email, String refreshToken) {
         String key = getRefreshTokenKey(email);
         try {
@@ -91,7 +91,7 @@ public class RefreshTokenService {
         }
     }
 
-    // 모든 사용자의 리프레시 토큰 삭제 (전체 로그아웃)
+    // 3. 모든 디바이스에서 로그아웃 처리 (패턴 매칭으로 복수 토큰 삭제)
     public void deleteAllRefreshTokens(String email) {
         String pattern = "refresh_token:" + email + "*";
         try {
@@ -110,6 +110,7 @@ public class RefreshTokenService {
     }
 
     private String getBlacklistKey(String token) {
+        // 4. 토큰 전체 값 대신 hashCode 사용으로 Redis 메모리 사용량 최적화
         return "blacklist:" + token.hashCode();
     }
 }

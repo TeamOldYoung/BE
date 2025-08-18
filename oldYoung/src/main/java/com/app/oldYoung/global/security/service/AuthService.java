@@ -65,7 +65,7 @@ public class AuthService {
         // 2. 추출한 Claims에서 사용자 정보 파싱
         String providerId = claims.getSubject(); // OIDC 표준에서 사용자를 식별하는 고유 ID
         String email = claims.get("email", String.class);
-        // 닉네임은 클레임 이름이 다를 수 있으므로 분기 처리
+        // 1. 소셜 제공자별로 닉네임 필드명이 다르므로 조건부 처리 (Google: "name", Kakao: "nickname")
         String nickname = "google".equalsIgnoreCase(provider) ? claims.get("name", String.class)
             : claims.get("nickname", String.class);
 
@@ -87,6 +87,7 @@ public class AuthService {
      * Provider로부터 받은 사용자 정보로 DB를 조회하고, 없으면 신규 가입시킵니다.
      */
     private User processUser(String provider, String providerId, String email, String nickname) {
+        // 2. 기존 사용자 조회 후, 없으면 신규 생성 (orElseGet으로 Lazy Evaluation 적용)
         return userRepository.findByProviderAndProviderId(provider, providerId)
             .orElseGet(() -> createNewUser(provider, providerId, email, nickname));
     }
@@ -109,6 +110,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
         }
         String email = jwtUtil.getEmailFromToken(refreshToken);
+        // 3. Redis에 저장된 Refresh Token과 요청으로 받은 토큰 일치 여부 검증
         if (!refreshTokenService.validateRefreshToken(email, refreshToken)) {
             throw new CustomException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
@@ -116,6 +118,7 @@ public class AuthService {
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         String newAccessToken = jwtUtil.createAccessToken(user.getEmail(), "USER");
         String newRefreshToken = jwtUtil.createRefreshToken(user.getEmail(), "USER");
+        // 4. 새로운 Refresh Token을 Redis에 저장하여 기존 토큰 무효화
         refreshTokenService.saveRefreshToken(user.getEmail(), newRefreshToken);
         response.setHeader("Authorization", "Bearer " + newAccessToken);
         cookieUtil.addRefreshTokenCookie(response, newRefreshToken);

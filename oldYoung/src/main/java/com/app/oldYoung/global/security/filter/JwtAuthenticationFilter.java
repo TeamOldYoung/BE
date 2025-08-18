@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt)) {
-                // 토큰 블랙리스트 확인
+                // 1. 로그아웃된 토큰이 다시 사용되는 것을 방지하기 위해 블랙리스트 체크
                 if (refreshTokenService.isTokenBlacklisted(jwt)) {
                     log.warn("블랙리스트된 토큰 사용 시도");
                     filterChain.doFilter(request, response);
@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // JWT에서 이메일 추출
                 String email = jwtUtil.getEmailFromToken(jwt);
                 
-                // 이미 인증된 사용자가 아닌 경우에만 처리
+                // 2. 중복 인증 방지: 이미 SecurityContext에 인증 정보가 있으면 건너뛴
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
 

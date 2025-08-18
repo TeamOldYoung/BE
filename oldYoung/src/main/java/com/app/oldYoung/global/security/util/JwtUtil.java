@@ -115,6 +115,7 @@ public class JwtUtil {
      */
     private PublicKey getPublicKey(String provider, String kid) {
         String cacheKey = provider + "_" + kid;
+        // 1. 네트워크 요청 최소화를 위해 공개키 메모리 캐싱 체크
         if (publicKeys.containsKey(cacheKey)) {
             return publicKeys.get(cacheKey);
         }
@@ -133,6 +134,7 @@ public class JwtUtil {
 
         PublicKey foundKey = null;
         if (jwks != null && jwks.get("keys") != null) {
+            // 2. JWKS에서 모든 키를 캐싱하고, 요청된 kid와 일치하는 키 찾기
             for (Map<String, String> keyInfo : jwks.get("keys")) {
                 String currentKid = keyInfo.get("kid");
                 PublicKey publicKey = generatePublicKey(keyInfo);
@@ -173,6 +175,7 @@ public class JwtUtil {
      */
     private String getKidFromTokenHeader(String token) {
         try {
+            // 3. JWT 구조: header.payload.signature에서 header 부분만 Base64 디코딩 후 kid 추출
             String headerSegment = token.substring(0, token.indexOf('.'));
             byte[] decodedHeader = Base64.getUrlDecoder().decode(headerSegment);
             Map<String, Object> header = new ObjectMapper().readValue(new String(decodedHeader),
