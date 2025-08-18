@@ -1,6 +1,7 @@
 package com.app.oldYoung.domain.chatAI.controller;
 
 import com.app.oldYoung.domain.chatAI.dto.ChatMessage;
+import com.app.oldYoung.domain.chatAI.service.ChatService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChatController {
 
   private final ChatClient chatClient;
+  private final ChatService chatService;
 
-  public ChatController(ChatClient chatClient) {
+  public ChatController(ChatClient chatClient, ChatService chatService) {
     this.chatClient = chatClient;
+    this.chatService = chatService;
   }
 
   // 시작 메시지
@@ -34,14 +37,7 @@ public class ChatController {
   public ChatMessage.Res chat(@PathVariable Long userId,
       @RequestBody ChatMessage.Req req) {
 
-    String answer = chatClient
-        .prompt()
-        .system("너는 노인들의 복지 도우미 챗봇이다. 대답은 존댓말을 사용하고, 진실되게 대답해야한다.")
-        .user(req.message())
-        .call()
-        .content();
-
-    return new ChatMessage.Res(answer);
+    return new ChatMessage.Res(chatService.reply(userId, req.message()));
   }
 
 }
