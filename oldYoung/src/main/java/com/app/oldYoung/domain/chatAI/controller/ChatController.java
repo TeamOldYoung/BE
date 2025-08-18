@@ -3,6 +3,7 @@ package com.app.oldYoung.domain.chatAI.controller;
 import com.app.oldYoung.domain.chatAI.dto.ChatMessage;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,16 +30,16 @@ public class ChatController {
   }
 
   // 채팅
-  @PostMapping
-  public ChatMessage.Res chat(@RequestBody ChatMessage.Req req) {
-
-    String userInput = req.message();
+  @PostMapping("/chat/{userId}")
+  public ChatMessage.Res chat(@PathVariable Long userId,
+      @RequestBody ChatMessage.Req req) {
 
     String answer = chatClient
         .prompt()
+        .system("너는 노인들의 복지 도우미 챗봇이다. 대답은 존댓말을 사용하고, 진실되게 대답해야한다.")
         .user(req.message())
         .call()
-        .content(); ;
+        .content();
 
     return new ChatMessage.Res(answer);
   }
