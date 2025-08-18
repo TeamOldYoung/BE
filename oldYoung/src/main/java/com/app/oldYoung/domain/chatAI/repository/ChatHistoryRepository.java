@@ -29,4 +29,9 @@ public class ChatHistoryRepository {
     return list == null ? List.of() : list;
   }
 
+  public void clearHistory(Long userId) {
+    String key = "chat:" + userId;
+    redisTemplate.delete(key);
+  }
+
 }
