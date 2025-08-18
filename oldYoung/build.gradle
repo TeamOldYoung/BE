@@ -46,6 +46,10 @@ dependencies {
 	//SPRING AI
 	implementation platform("org.springframework.ai:spring-ai-bom:1.0.0-M2")
 	implementation "org.springframework.ai:spring-ai-openai-spring-boot-starter"
+
+	//Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 }
 
 tasks.named('test') {
