@@ -1,6 +1,6 @@
-package com.app.oldYoung.global.exception;
+package com.app.oldYoung.global.common.apiResponse.exception;
 
-import com.app.oldYoung.global.response.ApiResponse;
+import com.app.oldYoung.global.common.apiResponse.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
                  errorCode.getCode(), e.getMessage(), e.getContext());
         
         return ResponseEntity
-                .status(errorCode.getStatus())
+                .status(errorCode.getHttpStatus())
                 .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
     }
 

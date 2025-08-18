@@ -1,4 +1,4 @@
-package com.app.oldYoung.global.common;
+package com.app.oldYoung.global.common.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
