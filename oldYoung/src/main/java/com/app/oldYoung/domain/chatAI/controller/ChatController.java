@@ -37,6 +37,7 @@ public class ChatController {
   public ChatMessage.Res chat(@PathVariable Long userId,
       @RequestBody ChatMessage.Req req) {
 
+    String answer = chatService.reply(userId, req.message());
     return new ChatMessage.Res(chatService.reply(userId, req.message()));
   }
 
