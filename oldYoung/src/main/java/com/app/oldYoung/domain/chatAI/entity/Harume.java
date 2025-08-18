@@ -1,4 +1,4 @@
-package com.app.oldYoung.domain.harume.entity;
+package com.app.oldYoung.domain.chatAI.entity;
 
 import com.app.oldYoung.global.common.BaseEntity;
 import com.app.oldYoung.domain.user.entity.User;
@@ -6,9 +6,10 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.ai.chat.messages.MessageType;
 
 @Entity
-@Table(name = "harumes")
+@Table(name = "ChatAI")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Harume extends BaseEntity {
@@ -21,7 +22,6 @@ public class Harume extends BaseEntity {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "message_type")
     private MessageType messageType;
 
     @OneToOne(fetch = FetchType.LAZY)
