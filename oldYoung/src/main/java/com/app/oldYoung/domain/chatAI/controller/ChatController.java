@@ -2,7 +2,6 @@ package com.app.oldYoung.domain.chatAI.controller;
 
 import com.app.oldYoung.domain.chatAI.dto.ChatMessage;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
