@@ -27,6 +27,7 @@ spring:
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             scope:
+              - openid
               - profile_nickname
               - account_email
         provider:

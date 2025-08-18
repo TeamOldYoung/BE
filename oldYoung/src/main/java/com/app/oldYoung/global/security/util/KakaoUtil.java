@@ -48,17 +48,8 @@ public class KakaoUtil {
             .block();
     }
 
-    public KakaoDTO.KakaoProfile requestProfile(KakaoDTO.OAuthToken oAuthToken) {
-        return webClient.get()
-            .uri("https://kapi.kakao.com/v2/user/me")
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + oAuthToken.getAccess_token())
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-            .retrieve()
-            .bodyToMono(KakaoDTO.KakaoProfile.class)
-            .doOnError(error -> {
-                log.error("OAuth 프로필 요청 실패: {}", error.getMessage());
-                throw new AuthHandler(ErrorCode.OAUTH_PROFILE_REQUEST_FAILED);
-            })
-            .block();
-    }
+    /**
+     * requestProfile 메소드는 OIDC 흐름에서 더 이상 사용되지 않습니다.
+     * ID Token에서 직접 프로필 정보를 추출하기 때문입니다.
+     */
 }

@@ -19,11 +19,18 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @GetMapping("/auth/login/kakao")
-    public ResponseEntity<ApiResponse<UserResponseDTO.JoinResultDTO>> kakaoLogin(
-            @RequestParam("code") String accessCode,
-            HttpServletResponse httpServletResponse) {
-        User user = authService.oAuthLogin(accessCode, httpServletResponse);
+    /**
+     * 소셜 로그인 통합 엔드포인트
+     * @param provider 'kakao', 'google' 등 소셜 로그인 제공자
+     * @param accessCode 각 소셜 로그인 제공자로부터 받은 인가 코드
+     * @return 로그인 또는 회원가입 결과
+     */
+    @GetMapping("/auth/login/{provider}")
+    public ResponseEntity<ApiResponse<UserResponseDTO.JoinResultDTO>> socialLogin(
+        @PathVariable("provider") String provider,
+        @RequestParam("code") String accessCode,
+        HttpServletResponse httpServletResponse) {
+        User user = authService.oAuthLogin(provider, accessCode, httpServletResponse);
         UserResponseDTO.JoinResultDTO result = UserConverter.toJoinResultDTO(user);
         return ResponseEntity.ok(ApiResponse.success(result));
     }

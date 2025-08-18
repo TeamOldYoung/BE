@@ -15,43 +15,11 @@ public class KakaoDTO {
         private int expires_in;
         private String scope;
         private int refresh_token_expires_in;
+        private String id_token;
     }
 
-    @Getter
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class KakaoProfile {
-
-        private Long id;
-        private String connected_at;
-        private Properties properties;
-        private KakaoAccount kakao_account;
-
-        @Getter
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        public class Properties {
-
-            private String nickname;
-        }
-
-        @Getter
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        public class KakaoAccount {
-
-            private String email;
-            private Boolean is_email_verified;
-            private Boolean has_email;
-            private Boolean profile_nickname_needs_agreement;
-            private Boolean email_needs_agreement;
-            private Boolean is_email_valid;
-            private Profile profile;
-
-            @Getter
-            @JsonIgnoreProperties(ignoreUnknown = true)
-            public class Profile {
-
-                private String nickname;
-                private Boolean is_default_nickname;
-            }
-        }
-    }
+    /**
+     * OIDC를 사용하면 ID Token에서 직접 프로필 정보를 얻으므로,
+     * 기존의 KakaoProfile 클래스는 더 이상 사용되지 않습니다.
+     */
 }

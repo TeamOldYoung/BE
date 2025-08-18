@@ -4,11 +4,11 @@ import com.app.oldYoung.domain.user.entity.User;
 import com.app.oldYoung.domain.user.repository.UserRepository;
 import com.app.oldYoung.global.common.apiResponse.exception.CustomException;
 import com.app.oldYoung.global.common.apiResponse.exception.ErrorCode;
-import com.app.oldYoung.global.security.converter.AuthConverter;
 import com.app.oldYoung.global.security.dto.KakaoDTO;
 import com.app.oldYoung.global.security.util.CookieUtil;
 import com.app.oldYoung.global.security.util.JwtUtil;
 import com.app.oldYoung.global.security.util.KakaoUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +28,27 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
 
     @Transactional
-    public User oAuthLogin(String accessCode, HttpServletResponse httpServletResponse) {
-        KakaoDTO.OAuthToken oAuthToken = kakaoUtil.requestToken(accessCode);
-        KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.requestProfile(oAuthToken);
+    public User oAuthLogin(String provider, String accessCode, HttpServletResponse httpServletResponse) {
+        User user;
 
-        User user = processUser(kakaoProfile);
+        if ("kakao".equalsIgnoreCase(provider)) {
+            // 1. 카카오로부터 토큰(Access Token + ID Token)을 받습니다.
+            KakaoDTO.OAuthToken oAuthToken = kakaoUtil.requestToken(accessCode);
+            String idToken = oAuthToken.getId_token();
 
+            // 2. JwtUtil을 통해 ID Token을 검증하고 사용자 정보를 추출합니다.
+            Claims claims = jwtUtil.validateAndGetClaimsFromKakaoToken(idToken);
+            String providerId = claims.getSubject(); // 'sub' 클레임 (사용자 고유 ID)
+            String email = claims.get("email", String.class);
+            String nickname = claims.get("nickname", String.class);
+
+            // 3. 사용자 정보를 처리(조회 또는 생성)합니다.
+            user = processUser(provider, providerId, email, nickname);
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 소셜 로그인 제공자입니다: " + provider);
+        }
+
+        // 4. 우리 서비스의 JWT(Access/Refresh Token)를 생성하고 응답에 담습니다.
         String accessToken = jwtUtil.createAccessToken(user.getEmail(), "USER");
         String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), "USER");
 
@@ -45,24 +60,19 @@ public class AuthService {
         return user;
     }
 
-    private User processUser(KakaoDTO.KakaoProfile kakaoProfile) {
-        String providerId = String.valueOf(kakaoProfile.getId());
-        return userRepository.findByProviderAndProviderId("kakao", providerId)
-            .orElseGet(() -> createNewUser(
-                kakaoProfile.getKakao_account().getEmail(),
-                kakaoProfile.getKakao_account().getProfile().getNickname(),
-                providerId
-            ));
+    private User processUser(String provider, String providerId, String email, String nickname) {
+        return userRepository.findByProviderAndProviderId(provider, providerId)
+            .orElseGet(() -> createNewUser(provider, providerId, email, nickname));
     }
 
-    private User createNewUser(String email, String nickname, String providerId) {
-        User newUser = AuthConverter.toUser(
-            email,
-            nickname,
-            null,
-            providerId,
-            passwordEncoder
-        );
+    private User createNewUser(String provider, String providerId, String email, String nickname) {
+        User newUser = User.builder()
+            .email(email)
+            .membername(nickname)
+            .password(null) // 소셜 로그인은 비밀번호 없음
+            .provider(provider)
+            .providerId(providerId)
+            .build();
         return userRepository.save(newUser);
     }
 
