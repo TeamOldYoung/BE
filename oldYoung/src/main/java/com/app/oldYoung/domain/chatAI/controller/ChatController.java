@@ -17,18 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/harume")
 public class ChatController {
 
-  private final ChatClient chatClient;
   private final ChatService chatService;
 
-  public ChatController(ChatClient chatClient, ChatService chatService) {
-    this.chatClient = chatClient;
+  public ChatController(ChatService chatService) {
     this.chatService = chatService;
   }
 
   // 시작 메시지
-  @GetMapping("/start")
-  public ResponseEntity<ChatMessage.Res> start(@AuthenticationPrincipal CustomUserDetails user) {
-    chatService.startNewSession(user.getId());
+  @GetMapping("/start/{userId}")
+  public ResponseEntity<ChatMessage.Res> start(@PathVariable Long userId) {
+    chatService.startNewSession(userId);
     ChatMessage.Res response = new ChatMessage.Res(
         "안녕하세요, 하루미에요!😉\n" +
             "어르신을 위한 건강·복지 정보를 쉽게 알려드릴게요.\n\n" +
@@ -38,10 +36,10 @@ public class ChatController {
   }
 
   // 채팅
-  @PostMapping("/chat")
-  public ResponseEntity<ChatMessage.Res> chat(@AuthenticationPrincipal CustomUserDetails user,
+  @PostMapping("/chat/{userId}")
+  public ResponseEntity<ChatMessage.Res> chat(@PathVariable Long userId,
       @RequestBody ChatMessage.Req req) {
-    String answer = chatService.reply(user.getId(), req.message());
+    String answer = chatService.reply(userId, req.message());
     ChatMessage.Res response = new ChatMessage.Res(answer);
     return ResponseEntity.ok(response);
   }
