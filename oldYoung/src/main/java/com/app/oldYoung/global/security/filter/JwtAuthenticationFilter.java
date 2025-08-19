@@ -2,6 +2,7 @@ package com.app.oldYoung.global.security.filter;
 
 import com.app.oldYoung.global.security.service.CustomUserDetailsService;
 import com.app.oldYoung.global.security.service.RefreshTokenService;
+import com.app.oldYoung.global.security.util.CookieUtil;
 import com.app.oldYoung.global.security.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,6 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
     private final RefreshTokenService refreshTokenService;
+    private final CookieUtil cookieUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
@@ -75,10 +77,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
+        // 1. Authorization 헤더에서 토큰 확인
         String bearerToken = request.getHeader("Authorization");
-        
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7); // "Bearer " 제거
+        }
+        
+        // 2. 쿠키에서 accessToken 확인
+        String cookieToken = cookieUtil.getAccessTokenFromCookie(request);
+        if (StringUtils.hasText(cookieToken)) {
+            return cookieToken;
         }
         
         return null;

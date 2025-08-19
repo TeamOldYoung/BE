@@ -1,57 +1,48 @@
 package com.app.oldYoung.global.security.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Getter;
 
 public class KakaoDTO {
 
-    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class OAuthToken {
+    public record OAuthToken(
+        String access_token,
+        String token_type,
+        String refresh_token,
+        int expires_in,
+        String scope,
+        int refresh_token_expires_in
+    ) {}
 
-        private String access_token;
-        private String token_type;
-        private String refresh_token;
-        private int expires_in;
-        private String scope;
-        private int refresh_token_expires_in;
-    }
-
-    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class KakaoProfile {
-
-        private Long id;
-        private String connected_at;
-        private Properties properties;
-        private KakaoAccount kakao_account;
-
-        @Getter
+    public record KakaoProfile(
+        Long id,
+        String connected_at,
+        Properties properties,
+        KakaoAccount kakao_account
+    ) {
+        
         @JsonIgnoreProperties(ignoreUnknown = true)
-        public class Properties {
+        public record Properties(
+            String nickname
+        ) {}
 
-            private String nickname;
-        }
-
-        @Getter
         @JsonIgnoreProperties(ignoreUnknown = true)
-        public class KakaoAccount {
-
-            private String email;
-            private Boolean is_email_verified;
-            private Boolean has_email;
-            private Boolean profile_nickname_needs_agreement;
-            private Boolean email_needs_agreement;
-            private Boolean is_email_valid;
-            private Profile profile;
-
-            @Getter
+        public record KakaoAccount(
+            String email,
+            Boolean is_email_verified,
+            Boolean has_email,
+            Boolean profile_nickname_needs_agreement,
+            Boolean email_needs_agreement,
+            Boolean is_email_valid,
+            Profile profile
+        ) {
+            
             @JsonIgnoreProperties(ignoreUnknown = true)
-            public class Profile {
-
-                private String nickname;
-                private Boolean is_default_nickname;
-            }
+            public record Profile(
+                String nickname,
+                Boolean is_default_nickname
+            ) {}
         }
     }
 }

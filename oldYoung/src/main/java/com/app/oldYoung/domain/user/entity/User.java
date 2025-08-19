@@ -1,7 +1,7 @@
 package com.app.oldYoung.domain.user.entity;
 
 import com.app.oldYoung.domain.entitlement.entity.Entitlement;
-import com.app.oldYoung.domain.harume.entity.Harume;
+import com.app.oldYoung.domain.chatAI.entity.Harume;
 import com.app.oldYoung.domain.incomebracket.entity.IncomeBracket;
 import com.app.oldYoung.domain.incomesnapshot.entity.IncomeSnapshot;
 import com.app.oldYoung.global.common.entity.BaseEntity;

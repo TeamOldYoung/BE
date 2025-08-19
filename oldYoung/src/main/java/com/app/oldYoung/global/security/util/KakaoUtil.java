@@ -51,7 +51,7 @@ public class KakaoUtil {
     public KakaoDTO.KakaoProfile requestProfile(KakaoDTO.OAuthToken oAuthToken) {
         return webClient.get()
             .uri("https://kapi.kakao.com/v2/user/me")
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + oAuthToken.getAccess_token())
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + oAuthToken.access_token())
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .retrieve()
             .bodyToMono(KakaoDTO.KakaoProfile.class)
