@@ -2,7 +2,6 @@ package com.app.oldYoung.domain.chatAI.repository;
 
 import com.app.oldYoung.domain.chatAI.dto.ChatMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

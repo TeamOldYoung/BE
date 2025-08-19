@@ -1,4 +1,4 @@
-package com.app.oldYoung.global.response;
+package com.app.oldYoung.global.common.apiResponse.response;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

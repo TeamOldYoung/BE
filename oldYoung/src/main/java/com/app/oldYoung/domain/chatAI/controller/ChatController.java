@@ -2,10 +2,7 @@ package com.app.oldYoung.domain.chatAI.controller;
 
 import com.app.oldYoung.domain.chatAI.dto.ChatMessage;
 import com.app.oldYoung.domain.chatAI.service.ChatService;
-import com.app.oldYoung.domain.user.entity.User;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;

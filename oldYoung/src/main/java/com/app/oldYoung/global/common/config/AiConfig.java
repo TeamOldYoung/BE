@@ -1,4 +1,4 @@
-package com.app.oldYoung.global.config;
+package com.app.oldYoung.global.common.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
