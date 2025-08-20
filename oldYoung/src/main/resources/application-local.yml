@@ -54,3 +54,7 @@ jwt:
   access-token-expiration: 3600000
   refresh-token-expiration: 604800000
 
+flask:
+  api:
+    base-url: ${FLASK_API_BASE_URL:http://localhost:3000}
+
