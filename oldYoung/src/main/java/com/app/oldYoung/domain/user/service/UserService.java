@@ -21,13 +21,16 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Long incomeBracket = null;
+        Long expBracket = null;
         if (user.getIncomeSnapshot() != null) {
             incomeBracket = user.getIncomeSnapshot().getMidRatio();
+            expBracket = user.getIncomeSnapshot().getExpBracket();
         }
 
         return new UserMyPageResponseDTO(
                 user.getMembername(),
                 incomeBracket,
+                expBracket,
                 user.getBirthDate(),
                 user.getEmail()
         );
