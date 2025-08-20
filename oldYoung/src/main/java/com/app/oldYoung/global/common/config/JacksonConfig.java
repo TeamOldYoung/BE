@@ -1,4 +1,4 @@
-package com.app.oldYoung.global.config;
+package com.app.oldYoung.global.common.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

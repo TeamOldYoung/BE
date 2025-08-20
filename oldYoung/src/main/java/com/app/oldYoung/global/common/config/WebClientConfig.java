@@ -1,4 +1,4 @@
-package com.app.oldYoung.global.config;
+package com.app.oldYoung.global.common.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
