@@ -2,15 +2,12 @@ spring:
   application:
     name: oldYoung
 
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
-
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,7 +15,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false
 
   security:
     oauth2:
@@ -58,5 +54,3 @@ jwt:
   access-token-expiration: 3600000
   refresh-token-expiration: 604800000
 
-app:
-  environment: ${APP_ENV:local}
