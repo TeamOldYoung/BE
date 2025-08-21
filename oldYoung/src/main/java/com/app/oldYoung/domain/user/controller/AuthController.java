@@ -1,9 +1,7 @@
 package com.app.oldYoung.domain.user.controller;
 
-import com.app.oldYoung.domain.user.converter.UserConverter;
 import com.app.oldYoung.domain.user.dto.UserRequestDTO;
 import com.app.oldYoung.domain.user.dto.UserResponseDTO;
-import com.app.oldYoung.domain.user.entity.User;
 import com.app.oldYoung.global.common.apiResponse.response.ApiResponse;
 import com.app.oldYoung.global.security.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +21,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<UserResponseDTO.JoinResultDTO>> kakaoLogin(
             @RequestParam("code") String accessCode,
             HttpServletResponse httpServletResponse) {
-        User user = authService.oAuthLogin(accessCode, httpServletResponse);
-        UserResponseDTO.JoinResultDTO result = UserConverter.toJoinResultDTO(user);
+        UserResponseDTO.JoinResultDTO result = authService.oAuthLogin(accessCode, httpServletResponse);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 

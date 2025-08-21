@@ -37,7 +37,7 @@ public class AIAnalysisService {
                         return Mono.error(e);
                     }
                 })
-;
+                ;
     }
 
     private void saveAnalysisResult(IncomeRequestDTO requestDTO, IncomeResponseDTO response, String userEmail) {
@@ -73,7 +73,7 @@ public class AIAnalysisService {
             if (analysisResult.containsKey("결과 요약")) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> summary = (Map<String, Object>) analysisResult.get("결과 요약");
-                
+
                 IncomeSnapshot snapshot = IncomeSnapshot.create(
                         getLongValue(summary, "incomeEval"),
                         getLongValue(summary, "assetEval"),
