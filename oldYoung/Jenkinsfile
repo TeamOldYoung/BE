@@ -26,18 +26,21 @@ pipeline {
         stage('Build') {
             steps {
                 dir('oldYoung') {
+                    // 의존성만 변경된 경우 캐시 활용
                     sh '''
-                        ./gradlew clean bootJar -x test \
-                          --no-daemon --console=plain --no-parallel \
+                        ./gradlew bootJar -x test \
+                          --build-cache --console=plain \
                           -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"
                     '''
                 }
                 // 빌드가 끝난 시점에 커밋 정보 확보
                 script {
-                    env.COMMIT_INFO = sh(
-                        script: "git log -1 --pretty=format:'%h | %an | %s'",
-                        returnStdout: true
-                    ).trim()
+                    dir('oldYoung') {
+                        env.COMMIT_INFO = sh(
+                            script: "git log -1 --pretty=format:'%h | %an | %s'",
+                            returnStdout: true
+                        ).trim()
+                    }
                 }
             }
         }
@@ -61,33 +64,30 @@ pipeline {
     post {
         success {
             script {
-                def message = """{
-                    "content": "✅ Jenkins 빌드 성공!\\n이미지: ${DOCKER_IMAGE}\\n커밋: ${env.COMMIT_INFO}"
-                }"""
-                sh """
-                    curl -s -H "Content-Type: application/json" \
-                    -X POST -d '${message}' ${DISCORD_WEBHOOK} \
-                    || echo "Discord 알림 전송 실패"
-                """
+                sendDiscordNotification("✅ Jenkins 빌드 성공!\\n이미지: ${DOCKER_IMAGE}")
             }
         }
-
         failure {
             script {
-                def errorMsg = currentBuild.description ?: "알 수 없는 오류"
-                def message = """{
-                    "content": "🚨 Jenkins 빌드 실패!\\n빌드: #${BUILD_NUMBER}\\n커밋: ${env.COMMIT_INFO}\\n오류: ${errorMsg}"
-                }"""
-                sh """
-                    curl -s -H "Content-Type: application/json" \
-                    -X POST -d '${message}' ${DISCORD_WEBHOOK} \
-                    || echo "Discord 알림 전송 실패"
-                """
+                sendDiscordNotification("🚨 Jenkins 빌드 실패!\\n빌드: #${BUILD_NUMBER}")
             }
         }
-
         always {
             cleanWs()
         }
     }
+}
+
+def sendDiscordNotification(String message) {
+    def commitInfo = (env.COMMIT_INFO ?: "정보 없음").replace('"', '\\"')
+    def fullMessage = "${message}\\n커밋: ${commitInfo}"
+    
+    withCredentials([string(credentialsId: 'discord-webhook', variable: 'WEBHOOK_URL')]) {
+        sh """
+            curl -s -X POST "\${WEBHOOK_URL}" \
+            -H "Content-Type: application/json" \
+            -d '{"content": "${fullMessage}"}' || echo "Discord 알림 실패"
+        """
+    }
+}
 }
