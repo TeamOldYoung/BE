@@ -17,7 +17,7 @@ pipeline {
         stage('Build') {
             steps {
                 dir('oldYoung') {
-                      sh './gradlew clean build -x test --no-daemon --console=plain --no-parallel -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"'
+                      sh './gradlew clean bootJar -x test --no-daemon --console=plain --no-parallel -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"'
                 }
             }
         }
@@ -44,17 +44,18 @@ pipeline {
 
         stage('Docker Build & Push') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        def image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-                        image.push()
-                        image.push("${BUILD_NUMBER}")
+                dir('oldYoung') {
+                    script {
+                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                            def image = docker.build("kyumin19/be:latest")
+                            image.push()
+                            image.push("${BUILD_NUMBER}")
+                        }
                     }
                 }
             }
         }
     }
-
     post {
         always {
             cleanWs()
