@@ -1,9 +1,16 @@
 pipeline {
     agent any
 
+    options {
+        // 최신 빌드 5개만 보존
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
     environment {
         IMAGE_NAME = "kyumin19/be"
-        IMAGE_TAG = "latest"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKER_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
         DISCORD_WEBHOOK = credentials('discord-webhook')
     }
 
@@ -18,73 +25,95 @@ pipeline {
         stage('Build') {
             steps {
                 dir('oldYoung') {
-                      sh './gradlew clean bootJar -x test --no-daemon --console=plain --no-parallel -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"'
+                    sh '''
+                        ./gradlew clean bootJar -x test \
+                          --no-daemon --console=plain --no-parallel \
+                          -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"
+                    '''
                 }
             }
         }
-
-        // stage('Test') {
-        //    steps {
-        //        sh './gradlew test'
-        //        publishTestResults testResultsPattern: 'build/test-results/**/*.xml'
-        //        publishHTML([
-        //            allowMissing: false,
-        //            alwaysLinkToLastBuild: true,
-        //            keepAll: true,
-        //            reportDir: 'build/reports/tests/test',
-        //            reportFiles: 'index.html',
-        //            reportName: 'Test Report'
-        //        ])
-        //    }
-        //    post {
-        //        always {
-        //            archiveArtifacts artifacts: 'build/test-results/**/*.xml', fingerprint: true
-        //        }
-        //    }
-        //}
 
         stage('Docker Build & Push') {
             steps {
                 dir('oldYoung') {
                     script {
                         docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                            def image = docker.build("kyumin19/be:latest")
+                            // 빌드 번호 태그로 이미지 빌드
+                            def image = docker.build("${DOCKER_IMAGE}")
+
+                            // 빌드 번호 태그 push
                             image.push()
-                            image.push("${BUILD_NUMBER}")
+
+                            // latest 태그 push
+                            image.push("latest")
+
+                            echo "✅ Docker 이미지 푸시 성공: ${DOCKER_IMAGE}"
                         }
                     }
                 }
             }
         }
     }
+
     post {
         always {
             cleanWs()
         }
         success {
             script {
-                // 최근 커밋 정보 가져오기
-                def commitInfo = sh(script: "git log -1 --pretty=format:'%h | %an | %s'", returnStdout: true).trim()
+                try {
+                    // 커밋 정보는 루트(.git)에서 가져옴
+                    def commitInfo = sh(
+                        script: "git log -1 --pretty=format:'%h | %an | %s'",
+                        returnStdout: true
+                    ).trim()
 
-                // Discord 전송
-                sh """
-                    curl -H "Content-Type: application/json" \
-                    -X POST \
-                    -d '{"content": "✅ Jenkins 빌드 성공!\\n이미지: ${IMAGE_NAME}:${IMAGE_TAG}\\n빌드: #${BUILD_NUMBER}\\n커밋: ${commitInfo}"}' \
-                    ${DISCORD_WEBHOOK}
-                """
+                    // JSON 이스케이프 처리
+                    def escapedCommitInfo = commitInfo.replace('"', '\\"')
+                                                      .replace('\n', '\\n')
+                                                      .replace('\r', '\\r')
+
+                    def message = """{
+                        "content": "✅ Jenkins 빌드 성공!\\n이미지: ${DOCKER_IMAGE}\\n커밋: ${escapedCommitInfo}"
+                    }"""
+
+                    sh """
+                        curl -s -H "Content-Type: application/json" \
+                        -X POST \
+                        -d '${message}' \
+                        ${DISCORD_WEBHOOK} || echo "Discord 알림 전송 실패"
+                    """
+                } catch (Exception e) {
+                    echo "Discord 성공 알림 전송 중 오류: ${e.getMessage()}"
+                }
             }
         }
         failure {
             script {
-                def commitInfo = sh(script: "git log -1 --pretty=format:'%h | %an | %s'", returnStdout: true).trim()
+                try {
+                    def commitInfo = sh(
+                        script: "git log -1 --pretty=format:'%h | %an | %s'",
+                        returnStdout: true
+                    ).trim()
 
-                sh """
-                    curl -H "Content-Type: application/json" \
-                    -X POST \
-                    -d '{"content": "🚨 Jenkins 빌드 실패! 죽을래요?\\n빌드: #${BUILD_NUMBER}\\n커밋: ${commitInfo}"}' \
-                    ${DISCORD_WEBHOOK}
-                """
+                    def escapedCommitInfo = commitInfo.replace('"', '\\"')
+                                                      .replace('\n', '\\n')
+                                                      .replace('\r', '\\r')
+
+                    def message = """{
+                        "content": "🚨 Jenkins 빌드 실패!\\n빌드: #${BUILD_NUMBER}\\n커밋: ${escapedCommitInfo}"
+                    }"""
+
+                    sh """
+                        curl -s -H "Content-Type: application/json" \
+                        -X POST \
+                        -d '${message}' \
+                        ${DISCORD_WEBHOOK} || echo "Discord 알림 전송 실패"
+                    """
+                } catch (Exception e) {
+                    echo "Discord 실패 알림 전송 중 오류: ${e.getMessage()}"
+                }
             }
         }
     }
