@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'jdk17'
+    }
+
+    environment {
+        IMAGE_NAME = "kyumin19/be"
+        IMAGE_TAG = "latest"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/TeamOldYoung/BE.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh './gradlew clean build -x test'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh './gradlew test'
+                publishTestResults testResultsPattern: 'build/test-results/**/*.xml'
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: 'index.html',
+                    reportName: 'Test Report'
+                ])
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'build/test-results/**/*.xml', fingerprint: true
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        def image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                        image.push()
+                        image.push("${BUILD_NUMBER}")
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
