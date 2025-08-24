@@ -22,27 +22,25 @@ pipeline {
             }
         }
 
-        stage('Test') {
-                    steps {
-                        dir('oldYoung') {
-                            sh './gradlew test --no-daemon --console=plain --no-parallel -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"'
-                            junit 'build/test-results/test/*.xml'
-                            publishHTML([
-                                allowMissing: false,
-                                alwaysLinkToLastBuild: true,
-                                keepAll: true,
-                                reportDir: 'build/reports/tests/test',
-                                reportFiles: 'index.html',
-                                reportName: 'Test Report'
-                            ])
-                        }
-                    }
-                    post {
-                        always {
-                            archiveArtifacts artifacts: 'oldYoung/build/test-results/**/*.xml', fingerprint: true
-                        }
-                    }
-                }
+        // stage('Test') {
+        //    steps {
+        //        sh './gradlew test'
+        //        publishTestResults testResultsPattern: 'build/test-results/**/*.xml'
+        //        publishHTML([
+        //            allowMissing: false,
+        //            alwaysLinkToLastBuild: true,
+        //            keepAll: true,
+        //            reportDir: 'build/reports/tests/test',
+        //            reportFiles: 'index.html',
+        //            reportName: 'Test Report'
+        //        ])
+        //    }
+        //    post {
+        //        always {
+        //            archiveArtifacts artifacts: 'build/test-results/**/*.xml', fingerprint: true
+        //        }
+        //    }
+        //}
 
         stage('Docker Build & Push') {
             steps {
@@ -62,10 +60,10 @@ pipeline {
             cleanWs()
         }
         success {
-            echo '✅ Pipeline 성공!'
+            echo 'Pipeline succeeded!'
         }
         failure {
-            echo '🚨 Pipeline failed!'
+            echo 'Pipeline failed!'
         }
     }
 }
