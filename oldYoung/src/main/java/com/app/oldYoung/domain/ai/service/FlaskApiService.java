@@ -27,7 +27,7 @@ public class FlaskApiService {
     }
 
     public Mono<WelfareResponseDTO> getWelfareInfo(WelfareRequestDTO requestDTO) {
-        log.info("Flask API 복지정보 검색 요청: 지역={}", requestDTO.region());
+        log.info("Flask API 복지정보 검색 요청: 나이={}, 지역={}", requestDTO.age(), requestDTO.region());
         
         return webClient.post()
                 .uri("/welfare/")
