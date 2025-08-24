@@ -4,12 +4,13 @@ pipeline {
     options {
         // 최신 빌드 5개만 보존
         buildDiscarder(logRotator(numToKeepStr: '5'))
+        // 빌드 타임아웃 (30분 이상 걸리면 종료)
         timeout(time: 30, unit: 'MINUTES')
     }
 
     environment {
-        IMAGE_NAME = "kyumin19/be"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_NAME   = "kyumin19/be"
+        IMAGE_TAG    = "${BUILD_NUMBER}"
         DOCKER_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
         DISCORD_WEBHOOK = credentials('discord-webhook')
     }
@@ -31,6 +32,13 @@ pipeline {
                           -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"
                     '''
                 }
+                // 빌드가 끝난 시점에 커밋 정보 확보
+                script {
+                    env.COMMIT_INFO = sh(
+                        script: "git log -1 --pretty=format:'%h | %an | %s'",
+                        returnStdout: true
+                    ).trim()
+                }
             }
         }
 
@@ -39,15 +47,9 @@ pipeline {
                 dir('oldYoung') {
                     script {
                         docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                            // 빌드 번호 태그로 이미지 빌드
                             def image = docker.build("${DOCKER_IMAGE}")
-
-                            // 빌드 번호 태그 push
                             image.push()
-
-                            // latest 태그 push
                             image.push("latest")
-
                             echo "✅ Docker 이미지 푸시 성공: ${DOCKER_IMAGE}"
                         }
                     }
@@ -57,64 +59,35 @@ pipeline {
     }
 
     post {
-        always {
-            cleanWs()
-        }
         success {
             script {
-                try {
-                    // 커밋 정보는 루트(.git)에서 가져옴
-                    def commitInfo = sh(
-                        script: "git log -1 --pretty=format:'%h | %an | %s'",
-                        returnStdout: true
-                    ).trim()
-
-                    // JSON 이스케이프 처리
-                    def escapedCommitInfo = commitInfo.replace('"', '\\"')
-                                                      .replace('\n', '\\n')
-                                                      .replace('\r', '\\r')
-
-                    def message = """{
-                        "content": "✅ Jenkins 빌드 성공!\\n이미지: ${DOCKER_IMAGE}\\n커밋: ${escapedCommitInfo}"
-                    }"""
-
-                    sh """
-                        curl -s -H "Content-Type: application/json" \
-                        -X POST \
-                        -d '${message}' \
-                        ${DISCORD_WEBHOOK} || echo "Discord 알림 전송 실패"
-                    """
-                } catch (Exception e) {
-                    echo "Discord 성공 알림 전송 중 오류: ${e.getMessage()}"
-                }
+                def message = """{
+                    "content": "✅ Jenkins 빌드 성공!\\n이미지: ${DOCKER_IMAGE}\\n커밋: ${env.COMMIT_INFO}"
+                }"""
+                sh """
+                    curl -s -H "Content-Type: application/json" \
+                    -X POST -d '${message}' ${DISCORD_WEBHOOK} \
+                    || echo "Discord 알림 전송 실패"
+                """
             }
         }
+
         failure {
             script {
-                try {
-                    def commitInfo = sh(
-                        script: "git log -1 --pretty=format:'%h | %an | %s'",
-                        returnStdout: true
-                    ).trim()
-
-                    def escapedCommitInfo = commitInfo.replace('"', '\\"')
-                                                      .replace('\n', '\\n')
-                                                      .replace('\r', '\\r')
-
-                    def message = """{
-                        "content": "🚨 Jenkins 빌드 실패!\\n빌드: #${BUILD_NUMBER}\\n커밋: ${escapedCommitInfo}"
-                    }"""
-
-                    sh """
-                        curl -s -H "Content-Type: application/json" \
-                        -X POST \
-                        -d '${message}' \
-                        ${DISCORD_WEBHOOK} || echo "Discord 알림 전송 실패"
-                    """
-                } catch (Exception e) {
-                    echo "Discord 실패 알림 전송 중 오류: ${e.getMessage()}"
-                }
+                def errorMsg = currentBuild.description ?: "알 수 없는 오류"
+                def message = """{
+                    "content": "🚨 Jenkins 빌드 실패!\\n빌드: #${BUILD_NUMBER}\\n커밋: ${env.COMMIT_INFO}\\n오류: ${errorMsg}"
+                }"""
+                sh """
+                    curl -s -H "Content-Type: application/json" \
+                    -X POST -d '${message}' ${DISCORD_WEBHOOK} \
+                    || echo "Discord 알림 전송 실패"
+                """
             }
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
