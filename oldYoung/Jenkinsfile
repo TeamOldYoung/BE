@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "kyumin19/be"
         IMAGE_TAG = "latest"
+        DISCORD_WEBHOOK = credentials('discord-webhook')
     }
 
     stages {
@@ -61,10 +62,30 @@ pipeline {
             cleanWs()
         }
         success {
-            echo 'Pipeline succeeded!'
+            script {
+                // 최근 커밋 정보 가져오기
+                def commitInfo = sh(script: "git log -1 --pretty=format:'%h | %an | %s'", returnStdout: true).trim()
+
+                // Discord 전송
+                sh """
+                    curl -H "Content-Type: application/json" \
+                    -X POST \
+                    -d '{"content": "✅ Jenkins 빌드 성공!\\n이미지: ${IMAGE_NAME}:${IMAGE_TAG}\\n빌드: #${BUILD_NUMBER}\\n커밋: ${commitInfo}"}' \
+                    ${DISCORD_WEBHOOK}
+                """
+            }
         }
         failure {
-            echo 'Pipeline failed!'
+            script {
+                def commitInfo = sh(script: "git log -1 --pretty=format:'%h | %an | %s'", returnStdout: true).trim()
+
+                sh """
+                    curl -H "Content-Type: application/json" \
+                    -X POST \
+                    -d '{"content": "🚨 Jenkins 빌드 실패! 죽을래요?\\n빌드: #${BUILD_NUMBER}\\n커밋: ${commitInfo}"}' \
+                    ${DISCORD_WEBHOOK}
+                """
+            }
         }
     }
 }
