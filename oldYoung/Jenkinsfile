@@ -17,7 +17,7 @@ pipeline {
         stage('Build') {
             steps {
                 dir('oldYoung') {
-                      sh './gradlew clean build -x test'
+                      sh './gradlew clean build -x test --no-daemon --console=plain --no-parallel -Dorg.gradle.jvmargs="-Xmx256m -Xms128m"'
                 }
             }
         }
