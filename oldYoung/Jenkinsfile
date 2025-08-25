@@ -15,9 +15,9 @@ pipeline {
         DISCORD_WEBHOOK = credentials('discord-webhook')
         
         // 배포 서버 정보 (Jenkins Credentials에서 설정)
-        DEPLOY_USER = credentials('deploy-server-user')
+        /* DEPLOY_USER = credentials('deploy-server-user')
         DEPLOY_HOST = credentials('deploy-server-host')
-        DEPLOY_PATH = credentials('deploy-server-path')
+        DEPLOY_PATH = credentials('deploy-server-path') */
     }
 
     stages {
@@ -57,22 +57,17 @@ pipeline {
                         docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
                             def image = docker.build("${DOCKER_IMAGE}")
                             
-                            // 먼저 빌드 번호 태그 푸시 (테스트용)
+                            // 빌드 번호와 latest 태그 모두 푸시
                             image.push("${BUILD_NUMBER}")
-                            echo "✅ 빌드 번호 태그 푸시 완료: ${IMAGE_NAME}:${BUILD_NUMBER}"
-                            
-                            // main 브랜치에서만 latest 태그 푸시 (운영 배포)
-                            if (env.BRANCH_NAME == 'main' || env.GIT_BRANCH == 'origin/main') {
-                                image.push("latest")
-                                echo "✅ latest 태그 푸시 완료: ${IMAGE_NAME}:latest"
-                            }
+                            image.push("latest")
+                            echo "✅ Docker 이미지 푸시 완료: ${IMAGE_NAME}:${BUILD_NUMBER}, ${IMAGE_NAME}:latest"
                         }
                     }
                 }
             }
         }
 
-        stage('Deploy') {
+        /* stage('Deploy') {
             when {
                 anyOf {
                     branch 'main'
@@ -97,7 +92,7 @@ pipeline {
                     echo "✅ 배포 완료: kyumin19/be:latest"
                 }
             }
-        }
+        } */
     }
 
     post {
