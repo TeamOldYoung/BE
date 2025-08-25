@@ -97,7 +97,7 @@ pipeline {
                         // 백업용 현재 이미지 태그 저장
                         env.BACKUP_IMAGE_TAG = sh(
                             script: """
-                                ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+                                ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                                 ${DEPLOY_USER}@${DEPLOY_HOST} '
                                 cd ${DEPLOY_PATH} && 
                                 docker compose config | grep "image:" | grep "${IMAGE_NAME}" | cut -d":" -f3 || echo "latest"
@@ -119,7 +119,7 @@ pipeline {
                         try {
                             // 1. 새 이미지 pull
                             sh """
-                                ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+                                ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                                 ${DEPLOY_USER}@${DEPLOY_HOST} '
                                 cd ${DEPLOY_PATH} &&
                                 export BE_IMAGE=${IMAGE_NAME} &&
@@ -131,7 +131,7 @@ pipeline {
                             
                             // 2. 서비스 재시작 (무중단 배포)
                             sh """
-                                ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+                                ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                                 ${DEPLOY_USER}@${DEPLOY_HOST} '
                                 cd ${DEPLOY_PATH} &&
                                 export BE_IMAGE=${IMAGE_NAME} &&
@@ -146,11 +146,11 @@ pipeline {
                             
                             def healthCheckResult = sh(
                                 script: """
-                                    ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+                                    ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                                     ${DEPLOY_USER}@${DEPLOY_HOST} '
                                     for i in \$(seq 1 ${HEALTH_CHECK_TIMEOUT}); do
                                         echo "헬스체크 시도 \$i/${HEALTH_CHECK_TIMEOUT}..."
-                                        if curl -f --max-time 5 ${HEALTH_CHECK_URL} > /dev/null 2>&1; then
+                                        if docker exec spring-app curl -f --max-time 5 http://localhost:8080/actuator/health > /dev/null 2>&1; then
                                             echo "✅ 헬스체크 성공!"
                                             exit 0
                                         fi
@@ -170,7 +170,7 @@ pipeline {
                             // 4. 최종 상태 확인
                             def finalStatus = sh(
                                 script: """
-                                    ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+                                    ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                                     ${DEPLOY_USER}@${DEPLOY_HOST} '
                                     cd ${DEPLOY_PATH} && 
                                     docker compose ps --format "table {{.Name}}\\t{{.Status}}\\t{{.Ports}}"
@@ -189,7 +189,7 @@ pipeline {
                                 echo "🔄 이전 버전으로 자동 롤백 시도: ${env.BACKUP_IMAGE_TAG}"
                                 
                                 sh """
-                                    ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+                                    ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                                     ${DEPLOY_USER}@${DEPLOY_HOST} '
                                     cd ${DEPLOY_PATH} &&
                                     export BE_IMAGE=${IMAGE_NAME} &&
@@ -212,7 +212,7 @@ pipeline {
                     sshagent(credentials: ['service-server-ssh']) {
                         // 배포 후 추가 검증
                         sh """
-                            ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
+                            ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                             ${DEPLOY_USER}@${DEPLOY_HOST} '
                             echo "🔍 최종 검증 중..."
                             echo "현재 실행 중인 컨테이너:"
