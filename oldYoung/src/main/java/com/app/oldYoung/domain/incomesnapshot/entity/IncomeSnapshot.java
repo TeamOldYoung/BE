@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "income_snapshots")
+@Table(name = "incomesnapshot")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IncomeSnapshot extends BaseEntity {
@@ -32,7 +32,23 @@ public class IncomeSnapshot extends BaseEntity {
     @Column(name = "exp_bracket")
     private Long expBracket;
 
+    @Column(name = "incomebreaket_id")
+    private Long incomeBreaketsId;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+    
+    public static IncomeSnapshot create(Long incomeEval, Long assetEval, Long totalIncome,
+                                      Long midRatio, Long expBracket, Long incomeBreaketsId, User user) {
+        IncomeSnapshot snapshot = new IncomeSnapshot();
+        snapshot.incomeEval = incomeEval;
+        snapshot.assetEval = assetEval;
+        snapshot.totalIncome = totalIncome;
+        snapshot.midRatio = midRatio;
+        snapshot.expBracket = expBracket;
+        snapshot.incomeBreaketsId = incomeBreaketsId;
+        snapshot.user = user;
+        return snapshot;
+    }
 }

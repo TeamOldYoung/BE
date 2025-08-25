@@ -7,4 +7,12 @@ public class UserResponseDTO {
         String email,
         String membername
     ) {}
+
+    public record UserMyPageResponseDTO(
+        String membername,
+        Long incomeBracket,
+        Long expBracket,
+        String birthDate,
+        String email
+    ) {}
 }

@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "income_brackets")
+@Table(name = "incomebreaket")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IncomeBracket extends BaseEntity {
@@ -41,9 +41,8 @@ public class IncomeBracket extends BaseEntity {
     @Column(name = "disability")
     private Boolean disability;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "employment_status")
-    private EmploymentStatus employmentStatus;
+    private String employmentStatus;
 
     @Column(name = "past_supported")
     private Boolean pastSupported;
@@ -51,4 +50,22 @@ public class IncomeBracket extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+    
+    public static IncomeBracket create(Integer familyNum, Long salary, Long pension, String housingType,
+                                     Long asset, Long debt, String carInfo, Boolean disability,
+                                     String employmentStatus, Boolean pastSupported, User user) {
+        IncomeBracket incomeBracket = new IncomeBracket();
+        incomeBracket.familyNum = familyNum;
+        incomeBracket.salary = salary;
+        incomeBracket.pension = pension;
+        incomeBracket.housingType = housingType;
+        incomeBracket.asset = asset;
+        incomeBracket.debt = debt;
+        incomeBracket.carInfo = carInfo;
+        incomeBracket.disability = disability;
+        incomeBracket.employmentStatus = employmentStatus;
+        incomeBracket.pastSupported = pastSupported;
+        incomeBracket.user = user;
+        return incomeBracket;
+    }
 }

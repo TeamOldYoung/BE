@@ -2,6 +2,7 @@ package com.app.oldYoung.global.security.service;
 
 import com.app.oldYoung.domain.user.entity.User;
 import com.app.oldYoung.domain.user.repository.UserRepository;
+import com.app.oldYoung.domain.user.dto.UserResponseDTO;
 import com.app.oldYoung.global.common.apiResponse.exception.CustomException;
 import com.app.oldYoung.global.common.apiResponse.exception.ErrorCode;
 import com.app.oldYoung.global.security.converter.AuthConverter;
@@ -30,7 +31,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
 
     @Transactional
-    public User oAuthLogin(String accessCode, HttpServletResponse httpServletResponse) {
+    public UserResponseDTO.JoinResultDTO oAuthLogin(String accessCode, HttpServletResponse httpServletResponse) {
         KakaoDTO.OAuthToken oAuthToken = kakaoUtil.requestToken(accessCode);
         KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.requestProfile(oAuthToken);
 
@@ -45,7 +46,11 @@ public class AuthService {
         cookieUtil.addAccessTokenCookie(httpServletResponse, accessToken);
         cookieUtil.addRefreshTokenCookie(httpServletResponse, refreshToken);
 
-        return user;
+        return new UserResponseDTO.JoinResultDTO(
+            user.getId(),
+            user.getEmail(),
+            user.getMembername()
+        );
     }
 
     private User processUser(KakaoDTO.KakaoProfile kakaoProfile) {
