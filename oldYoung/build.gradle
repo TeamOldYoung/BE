@@ -54,10 +54,13 @@ dependencies {
 
 	//SPRING AI
 	implementation platform("org.springframework.ai:spring-ai-bom:1.0.0-M2")
-	implementation "org.springframework.ai:spring-ai-openai-spring-boot-starter"
+	implementation ("org.springframework.ai:spring-ai-openai-spring-boot-starter") {
+		exclude group: 'io.swagger.core.v3'
+		exclude group: 'org.springdoc'
+	}
 
 	//Swagger
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 }
 
 tasks.named('test') {
