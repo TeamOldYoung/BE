@@ -31,7 +31,8 @@ public enum ErrorCode {
     // Business Logic Errors (E400~E499)
     ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E400", "요청한 데이터를 찾을 수 없습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "E401", "사용자를 찾을 수 없습니다."),
-    DUPLICATE_ENTITY(HttpStatus.CONFLICT, "E402", "중복된 데이터입니다.");
+    DUPLICATE_ENTITY(HttpStatus.CONFLICT, "E402", "중복된 데이터입니다."),
+    ANALYSIS_ALREADY_EXISTS(HttpStatus.CONFLICT, "E403", "이미 분석 결과가 존재합니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

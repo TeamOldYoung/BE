@@ -26,12 +26,4 @@ public class WelfareService {
         log.info("나이별 복지 서비스 조회: age={}", age);
         return welfareRepository.findByAge(age);
     }
-    
-    
-    @Transactional
-    public WelfareItem saveWelfareItem(WelfareItem welfareItem) {
-        log.info("복지 정보 저장: title={}, city={}, age={}", welfareItem.getTitle(), welfareItem.getCity(), welfareItem.getAge());
-        return welfareRepository.save(welfareItem);
-    }
-    
 }

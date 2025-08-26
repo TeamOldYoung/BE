@@ -8,6 +8,8 @@ import com.app.oldYoung.domain.user.entity.User;
 import com.app.oldYoung.domain.user.repository.UserRepository;
 import com.app.oldYoung.domain.incomebracket.repository.IncomeBracketRepository;
 import com.app.oldYoung.domain.incomesnapshot.repository.IncomeSnapshotRepository;
+import com.app.oldYoung.global.common.apiResponse.exception.CustomException;
+import com.app.oldYoung.global.common.apiResponse.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,65 +31,57 @@ public class AIAnalysisService {
     @Transactional
     public Mono<IncomeResponseDTO> analyzeIncomeWithUser(IncomeRequestDTO requestDTO, String userEmail) {
         return flaskApiService.getIncomeAnalysis(requestDTO)
-                .flatMap(response -> {
-                    try {
-                        saveAnalysisResult(requestDTO, response, userEmail);
-                        return Mono.just(response);
-                    } catch (Exception e) {
-                        return Mono.error(e);
-                    }
-                })
-                ;
+                .doOnNext(response -> saveAnalysisResult(requestDTO, response, userEmail));
     }
 
     private void saveAnalysisResult(IncomeRequestDTO requestDTO, IncomeResponseDTO response, String userEmail) {
-        try {
-            // 1. 사용자 조회
-            User user = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userEmail));
+        // 1. 사용자 조회
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-            // 2. 기존 분석이 있는지 확인
-            if (incomeBracketRepository.findByUser(user).isPresent()) {
-                throw new RuntimeException("이미 분석 결과가 존재합니다. 사용자는 한 번만 분석할 수 있습니다.");
-            }
+        // 사용자 정보 업데이트
+        user.updateUser(requestDTO.getBirthDate(), requestDTO.getAddress());
+        userRepository.save(user);
 
-            // 3. IncomeBracket 저장
-            IncomeBracket incomeBracket = IncomeBracket.create(
-                    requestDTO.familyNum(),
-                    requestDTO.Salary().longValue(),
-                    requestDTO.Pension().longValue(),
-                    requestDTO.housing_type(),
-                    requestDTO.Asset().longValue(),
-                    requestDTO.Debt().longValue(),
-                    requestDTO.Car_info(),
-                    requestDTO.Disability(),
-                    requestDTO.EmploymentStatus(),
-                    requestDTO.pastSupported(),
+        // 2. 기존 분석이 있는지 확인
+        if (incomeBracketRepository.findByUser(user).isPresent()) {
+            throw new CustomException(ErrorCode.ANALYSIS_ALREADY_EXISTS);
+        }
+
+        // 3. IncomeBracket 저장
+        IncomeBracket incomeBracket = IncomeBracket.create(
+                requestDTO.getFamilyNum(),
+                requestDTO.getSalary().longValue(),
+                requestDTO.getPension().longValue(),
+                requestDTO.getHousing_type(),
+                requestDTO.getAsset().longValue(),
+                requestDTO.getDebt().longValue(),
+                requestDTO.getCar_info(),
+                requestDTO.getDisability(),
+                requestDTO.getEmploymentStatus(),
+                requestDTO.getPastSupported(),
+                user
+        );
+
+        IncomeBracket savedBracket = incomeBracketRepository.save(incomeBracket);
+
+        // 4. IncomeSnapshot 저장
+        Map<String, Object> analysisResult = response.response();
+        if (analysisResult.containsKey("결과 요약")) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> summary = (Map<String, Object>) analysisResult.get("결과 요약");
+
+            IncomeSnapshot snapshot = IncomeSnapshot.create(
+                    getLongValue(summary, "incomeEval"),
+                    getLongValue(summary, "assetEval"),
+                    getLongValue(summary, "totalIncome"),
+                    getLongValue(summary, "midRatio"),
+                    getLongValue(summary, "expBracket"),
+                    savedBracket.getId(),
                     user
             );
 
-            IncomeBracket savedBracket = incomeBracketRepository.save(incomeBracket);
-
-            // 4. IncomeSnapshot 저장
-            Map<String, Object> analysisResult = response.response();
-            if (analysisResult.containsKey("결과 요약")) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> summary = (Map<String, Object>) analysisResult.get("결과 요약");
-
-                IncomeSnapshot snapshot = IncomeSnapshot.create(
-                        getLongValue(summary, "incomeEval"),
-                        getLongValue(summary, "assetEval"),
-                        getLongValue(summary, "totalIncome"),
-                        getLongValue(summary, "midRatio"),
-                        getLongValue(summary, "expBracket"),
-                        savedBracket.getId(),
-                        user
-                );
-
-                incomeSnapshotRepository.save(snapshot);
-            }
-
-        } catch (Exception e) {
+            incomeSnapshotRepository.save(snapshot);
         }
     }
 

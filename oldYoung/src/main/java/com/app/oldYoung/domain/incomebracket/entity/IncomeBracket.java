@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "incomebreaket")
+@Table(name = "incomebraket")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IncomeBracket extends BaseEntity {

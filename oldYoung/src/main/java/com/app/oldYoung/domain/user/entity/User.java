@@ -66,4 +66,9 @@ public class User extends BaseEntity {
         this.provider = provider;
         this.providerId = providerId;
     }
+
+    public void updateUser(String birthDate, String address) {
+        this.birthDate = birthDate;
+        this.address = address;
+    }
 }

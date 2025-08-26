@@ -1,15 +1,16 @@
 package com.app.oldYoung.domain.welfare.controller;
 
-import com.app.oldYoung.domain.welfare.dto.WelfareItemRequestDTO;
 import com.app.oldYoung.domain.welfare.dto.WelfareItemResponseDTO;
 import com.app.oldYoung.domain.welfare.service.WelfareService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -46,50 +47,6 @@ public class WelfareController {
     }
     
     
-    @PostMapping("/young")
-    @Operation(summary = "청년 복지 정보 저장", description = "청년(age=0)을 위한 복지 정보를 저장합니다")
-    public ResponseEntity<WelfareItemResponseDTO> saveYoungWelfare(
-            @Valid @RequestBody WelfareItemRequestDTO requestDTO) {
-        // age를 0으로 고정
-        WelfareItemRequestDTO youngRequestDTO = new WelfareItemRequestDTO(
-                requestDTO.title(),
-                requestDTO.subscript(),
-                requestDTO.period(),
-                requestDTO.agency(),
-                requestDTO.contact(),
-                requestDTO.applicant(),
-                requestDTO.link(),
-                requestDTO.city(),
-                0
-        );
-        
-        WelfareItemResponseDTO savedItem = WelfareItemResponseDTO.from(
-                welfareService.saveWelfareItem(youngRequestDTO.toEntity())
-        );
-        return ResponseEntity.ok(savedItem);
-    }
     
-    @PostMapping("/elder")
-    @Operation(summary = "노인 복지 정보 저장", description = "노인(age=1)을 위한 복지 정보를 저장합니다")
-    public ResponseEntity<WelfareItemResponseDTO> saveElderWelfare(
-            @Valid @RequestBody WelfareItemRequestDTO requestDTO) {
-        // age를 1로 고정
-        WelfareItemRequestDTO elderRequestDTO = new WelfareItemRequestDTO(
-                requestDTO.title(),
-                requestDTO.subscript(),
-                requestDTO.period(),
-                requestDTO.agency(),
-                requestDTO.contact(),
-                requestDTO.applicant(),
-                requestDTO.link(),
-                requestDTO.city(),
-                1
-        );
-        
-        WelfareItemResponseDTO savedItem = WelfareItemResponseDTO.from(
-                welfareService.saveWelfareItem(elderRequestDTO.toEntity())
-        );
-        return ResponseEntity.ok(savedItem);
-    }
     
 }
