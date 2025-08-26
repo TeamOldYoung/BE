@@ -25,7 +25,7 @@ public class CookieUtil {
     public void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(isProduction);
+        refreshCookie.setSecure(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenMaxAge);
         refreshCookie.setAttribute("SameSite", "None");
@@ -36,7 +36,7 @@ public class CookieUtil {
     public void addAccessTokenCookie(HttpServletResponse response, String accessToken) {
         Cookie accessCookie = new Cookie("accessToken", accessToken);
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(isProduction);
+        accessCookie.setSecure(true);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(accessTokenMaxAge);
         accessCookie.setAttribute("SameSite", "None");
