@@ -4,8 +4,9 @@ import com.app.oldYoung.domain.chatAI.dto.ChatMessage;
 import com.app.oldYoung.domain.chatAI.service.ChatService;
 import com.app.oldYoung.global.common.apiResponse.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,8 +23,9 @@ public class ChatController {
   }
 
   // 시작 메시지
-  @GetMapping("/start/{userId}")
-  public ResponseEntity<ApiResponse<ChatMessage.Res>> start(@PathVariable Long userId) {
+  @GetMapping("/start")
+  public ResponseEntity<ApiResponse<ChatMessage.Res>> start(@AuthenticationPrincipal UserDetails userDetails) {
+    Long userId = Long.valueOf(userDetails.getUsername());
     chatService.startNewSession(userId);
     ChatMessage.Res response = new ChatMessage.Res(
         "안녕하세요, 하루미에요!😉\n" +
@@ -34,9 +36,10 @@ public class ChatController {
   }
 
   // 채팅
-  @PostMapping("/chat/{userId}")
-  public ResponseEntity<ApiResponse<ChatMessage.Res>> chat(@PathVariable Long userId,
+  @PostMapping("/chat")
+  public ResponseEntity<ApiResponse<ChatMessage.Res>> chat(@AuthenticationPrincipal UserDetails userDetails,
       @RequestBody ChatMessage.Req req) {
+    Long userId = Long.valueOf(userDetails.getUsername());
     String answer = chatService.reply(userId, req.message());
     ChatMessage.Res response = new ChatMessage.Res(answer);
     return ResponseEntity.ok(ApiResponse.success(response));
