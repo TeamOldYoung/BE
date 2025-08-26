@@ -28,10 +28,7 @@ public class CookieUtil {
         refreshCookie.setSecure(isProduction);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenMaxAge);
-        
-        if (isProduction) {
-            refreshCookie.setAttribute("SameSite", "Strict");
-        }
+        refreshCookie.setAttribute("SameSite", "None");
         
         response.addCookie(refreshCookie);
     }
@@ -42,10 +39,7 @@ public class CookieUtil {
         accessCookie.setSecure(isProduction);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(accessTokenMaxAge);
-        
-        if (isProduction) {
-            accessCookie.setAttribute("SameSite", "Strict");
-        }
+        accessCookie.setAttribute("SameSite", "None");
         
         response.addCookie(accessCookie);
     }
