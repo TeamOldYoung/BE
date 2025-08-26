@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/C:\\Users\\4987k\\Documents\\AI/**)",
+      "Read(/C:\\Users\\4987k\\Documents\\AI\\AI\\api/**)",
+      "Read(/C:\\Users\\4987k\\Documents\\AI\\AI\\api/**)",
+      "Read(/C:\\Users\\4987k\\Documents\\AI\\AI\\services/**)",
+      "Read(/C:\\Users\\4987k\\Documents\\AI\\AI\\data/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
