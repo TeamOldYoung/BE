@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/health")
+@RequestMapping("/api/health")
 @Tag(name = "Health Check API", description = "서버 상태 확인 API")
 public class HealthCheckController {
 
     @GetMapping
     @Operation(summary = "서버 상태 확인", description = "서버가 정상적으로 작동하는지 확인합니다")
-    public ResponseEntity<ApiResponse<String>> healthCheck() {
-        return ResponseEntity.ok(ApiResponse.success("정상 작동"));
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("정상 작동");
     }
 }
