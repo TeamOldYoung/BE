@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/harume")
+@RequestMapping("/api/harume")
 @RequiredArgsConstructor
 @Tag(name = "Chat API", description = "AI 채팅 서비스 API")
 public class ChatController {
