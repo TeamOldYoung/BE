@@ -25,7 +25,7 @@ public class CookieUtil {
     public void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
+        refreshCookie.setSecure(isProduction);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(refreshTokenMaxAge);
         refreshCookie.setAttribute("SameSite", "None");
@@ -36,7 +36,7 @@ public class CookieUtil {
     public void addAccessTokenCookie(HttpServletResponse response, String accessToken) {
         Cookie accessCookie = new Cookie("accessToken", accessToken);
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
+        accessCookie.setSecure(isProduction);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(accessTokenMaxAge);
         accessCookie.setAttribute("SameSite", "None");
@@ -82,5 +82,17 @@ public class CookieUtil {
         accessCookie.setPath("/");
         accessCookie.setMaxAge(0);
         response.addCookie(accessCookie);
+    }
+    
+    // iOS Safari 호환 쿠키 설정 (SameSite=None; Secure 필수)
+    public void addSecureCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true); // SameSite=None에는 Secure 필수
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        cookie.setAttribute("SameSite", "None"); // 교차 사이트 전송 허용
+        
+        response.addCookie(cookie);
     }
 }

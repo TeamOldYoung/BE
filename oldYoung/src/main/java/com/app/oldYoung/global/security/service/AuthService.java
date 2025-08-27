@@ -32,25 +32,33 @@ public class AuthService {
 
     @Transactional
     public UserResponseDTO.JoinResultDTO oAuthLogin(String accessCode, HttpServletResponse httpServletResponse) {
-        KakaoDTO.OAuthToken oAuthToken = kakaoUtil.requestToken(accessCode);
-        KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.requestProfile(oAuthToken);
+        try {
+            KakaoDTO.OAuthToken oAuthToken = kakaoUtil.requestToken(accessCode);
+            KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.requestProfile(oAuthToken);
 
-        User user = processUser(kakaoProfile);
+            User user = processUser(kakaoProfile);
 
-        String accessToken = jwtUtil.createAccessToken(user.getEmail(), "USER");
-        String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), "USER");
+            String accessToken = jwtUtil.createAccessToken(user.getEmail(), "USER");
+            String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), "USER");
 
-        refreshTokenService.saveRefreshToken(user.getEmail(), refreshToken);
+            refreshTokenService.saveRefreshToken(user.getEmail(), refreshToken);
 
-        httpServletResponse.setHeader("Authorization", "Bearer " + accessToken);
-        cookieUtil.addAccessTokenCookie(httpServletResponse, accessToken);
-        cookieUtil.addRefreshTokenCookie(httpServletResponse, refreshToken);
+            httpServletResponse.setHeader("Authorization", "Bearer " + accessToken);
+            cookieUtil.addSecureCookie(httpServletResponse, "accessToken", accessToken, (int)(jwtUtil.getAccessTokenExpiration() / 1000));
+            cookieUtil.addSecureCookie(httpServletResponse, "refreshToken", refreshToken, (int)(jwtUtil.getRefreshTokenExpiration() / 1000));
 
-        return new UserResponseDTO.JoinResultDTO(
-            user.getId(),
-            user.getEmail(),
-            user.getMembername()
-        );
+            log.info("OAuth 로그인 성공 - 사용자: {}", user.getEmail());
+            
+            return new UserResponseDTO.JoinResultDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getMembername()
+            );
+            
+        } catch (Exception e) {
+            log.error("OAuth 로그인 실패: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     private User processUser(KakaoDTO.KakaoProfile kakaoProfile) {
@@ -76,7 +84,6 @@ public class AuthService {
 
     @Transactional
     public void reissueToken(HttpServletRequest request, HttpServletResponse response) {
-
         String refreshToken = cookieUtil.getRefreshTokenFromCookie(request);
         log.info("쿠키에서 추출한 RefreshToken: {}", refreshToken != null ? "존재" : "없음");
 
@@ -105,8 +112,8 @@ public class AuthService {
         refreshTokenService.saveRefreshToken(user.getEmail(), newRefreshToken);
 
         response.setHeader("Authorization", "Bearer " + newAccessToken);
-        cookieUtil.addAccessTokenCookie(response, newAccessToken);
-        cookieUtil.addRefreshTokenCookie(response, newRefreshToken);
+        cookieUtil.addSecureCookie(response, "accessToken", newAccessToken, (int)(jwtUtil.getAccessTokenExpiration() / 1000));
+        cookieUtil.addSecureCookie(response, "refreshToken", newRefreshToken, (int)(jwtUtil.getRefreshTokenExpiration() / 1000));
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {

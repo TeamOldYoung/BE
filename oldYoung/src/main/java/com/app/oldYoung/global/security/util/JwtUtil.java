@@ -88,4 +88,12 @@ public class JwtUtil {
             return true;
         }
     }
+    
+    public long getAccessTokenExpiration() {
+        return accessTokenExpiration;
+    }
+    
+    public long getRefreshTokenExpiration() {
+        return refreshTokenExpiration;
+    }
 }

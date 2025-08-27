@@ -20,7 +20,12 @@ public class AuthController {
     @GetMapping("/auth/login/kakao")
     public ResponseEntity<ApiResponse<UserResponseDTO.JoinResultDTO>> kakaoLogin(
             @RequestParam("code") String accessCode,
+            HttpServletRequest request,
             HttpServletResponse httpServletResponse) {
+        
+        httpServletResponse.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        httpServletResponse.setHeader("Pragma", "no-cache");
+        
         UserResponseDTO.JoinResultDTO result = authService.oAuthLogin(accessCode, httpServletResponse);
         return ResponseEntity.ok(ApiResponse.success(result));
     }

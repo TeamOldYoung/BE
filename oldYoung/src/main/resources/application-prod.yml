@@ -54,6 +54,9 @@ jwt:
   access-token-expiration: 3600000
   refresh-token-expiration: 604800000
 
+app:
+  environment: production
+
 flask:
   api:
     base-url: ${FLASK_API_BASE_URL}
